@@ -3,6 +3,12 @@ import java.io.File
 // Функция построения DFA из NFA методом "построения подмножеств"
 fun NFAtoDFA(filename_input : String, filename_output : String) : Map< Pair<MutableList<String>?, String>, MutableList<String>? > {
 
+    // Обычный счетчик, который будет нумеровать подмножества состояний
+    var counter_set_states = 0
+
+    // Будем хранить здесь короткие названия для множеств состояний нового DFA.
+    var short_names_for_sets_of_states : Map< MutableList<String>?, Int > = emptyMap()
+
     // Строим NFA по конфигурации из файла
     var NFA = NDFA(filename_input)
 
@@ -61,16 +67,26 @@ fun NFAtoDFA(filename_input : String, filename_output : String) : Map< Pair<Muta
 
     }
 
+    // Задаем подмножествам короткие имена
+    DFA_transition_function.forEach { elem ->
+        if (!short_names_for_sets_of_states.containsKey(elem.key.first)) {
+            short_names_for_sets_of_states += Pair(elem.key.first, counter_set_states++)
+        }
+    }
+
     // Записываем полученный DFA в файлик
     writeDFAtoFile(NFA.alphabet_size, NFA.states_number, NFA.dfa_start_state,
-                    DFA_transition_function, NFA.accepting_states, filename_output)
+        DFA_transition_function, NFA.accepting_states, filename_output, short_names_for_sets_of_states)
 
 
     // Формат записи переходов в файле
     // a1, a2, ..., an s b1, b2, ..., bn
     // ai, bi - элементы подмножеств, s - символ
 
+    //println(short_names_for_sets_of_states.map { "${it.key}: ${it.value}" }.joinToString(", "))
 
+
+    println(short_names_for_sets_of_states.map { "${it.key}: ${it.value}" }.joinToString(", "))
     return DFA_transition_function
 
 }
@@ -81,14 +97,14 @@ fun calculateStatesSubset(NFA_transition_function : Map<Pair<String, String>, Mu
 {
 
     // Вычисляеми все состояния, в которые можем добраться по всем символам из текущего подмножества
-   var result : MutableList<String> = mutableListOf()
+    var result : MutableList<String> = mutableListOf()
     for (i in 0..new_state!!.size.minus(1)) {
-       if (NFA_transition_function.containsKey(Pair(new_state[i], symbol))) {
-           NFA_transition_function[Pair(new_state[i], symbol)]!!.forEach {
-               result.add(it)
-           }
-       }
-   }
+        if (NFA_transition_function.containsKey(Pair(new_state[i], symbol))) {
+            NFA_transition_function[Pair(new_state[i], symbol)]!!.forEach {
+                result.add(it)
+            }
+        }
+    }
 
     return result
 }
@@ -108,7 +124,8 @@ fun writeDFAtoFile(alp_size: Int,
                    dfa_start: String,
                    states_ : Map< Pair<MutableList<String>?, String>, MutableList<String>? >,
                    acc_states : List<String>,
-                   filename: String)
+                   filename: String,
+                   short_names : Map< MutableList<String>?, Int >)
 {
 
 
@@ -123,6 +140,6 @@ fun writeDFAtoFile(alp_size: Int,
     file.writeText(text, Charsets.UTF_8)
 
     for (i in states_) {
-        file.appendText("${formatList(i.key.first)} ${i.key.second} ${formatList(i.value)}\n", Charsets.UTF_8)
+        file.appendText("${short_names[i.key.first]} ${i.key.second} ${short_names[i.value]}\n", Charsets.UTF_8)
     }
 }

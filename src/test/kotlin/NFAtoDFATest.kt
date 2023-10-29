@@ -9,6 +9,8 @@ class NFAtoDFATest {
 
     @Test       // Проверяем, что файл с предполагаемым DFA такой же как полученный файл С DFA, построенным из NFA
     fun compareOutputDFAandPredictedDFA() {
+        NFAtoDFA("data/Test_2_nfa_input.txt", "data/Test_2_nfa_output.txt") // Строим DFA по NFA
+
         assertEquals(true, isEqualFiles(firstFile.toPath(), secondFile.toPath()))
     }
 
