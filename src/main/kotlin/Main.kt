@@ -2,10 +2,13 @@ import Calculator.CalcVisitor
 import Calculator.calculatorLexer
 import Calculator.calculatorParser
 import org.graalvm.shadowed.org.antlr.v4.runtime.*
+import org.graalvm.shadowed.org.antlr.v4.runtime.misc.ParseCancellationException
 
 import java.io.File
 import java.io.FileInputStream
 import java.io.PrintWriter
+
+
 fun main() {
     println("Enter the path to the input file:")
     val input_file = readln()
@@ -16,8 +19,18 @@ fun main() {
     val tokens = CommonTokenStream(lexer)
     val parser = calculatorParser(tokens)
 
-    val eval = CalcVisitor()
-    val answer = eval.calculate(parser)
+    // кидает exxception при несоответствии грамматики и текста
+    parser.setErrorHandler(BailErrorStrategy())
+
+    var answer = ""
+    val calc = CalcVisitor()
+    try {
+        answer = calc.calculate(parser)
+    }
+    catch (e : ParseCancellationException) {
+        print("Input text does not match with the grammar!")
+        return
+    }
 
     // Парсим вычисления калькулятора
     val splitted_answer = answer.split("|")
