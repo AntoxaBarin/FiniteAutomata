@@ -38,18 +38,16 @@ fun Hopcroft(dfa : NDFA?) : List<HashSet<Int>> {
     while (Queue.size != 0) {
 
         var new_pair = Queue.remove()
-        //println("${new_pair.first}, ${new_pair.second}")
 
         var Involved : HashMap<Int, MutableList<Int>> = hashMapOf()
         for (q in new_pair.first) {
-            //for (r in 0 until Inv[q][new_pair.second]) {
             for (r in 0 until dfa.states_number) {
                 if (Inv[q][new_pair.second][r] == 1) {
                     var i = Class[r]
                     if (!Involved.containsKey(i)) {
                         Involved[i] = emptyList<Int>().toMutableList()
                     }
-                    Involved[i]!!.add(r) // add??
+                    Involved[i]!!.add(r)
 
                 }
             }
@@ -78,7 +76,15 @@ fun Hopcroft(dfa : NDFA?) : List<HashSet<Int>> {
         }
 
     }
-    return P
+
+    println("Minimization finished. Equality classes:")
+    var P_result = removeUnreachableStates(dfa, P)
+    for (i in P_result) {
+        print("$i ")
+    }
+    println()
+
+    return P_result
 }
 
 // Возвращает дополнение первого множества до второго (Пример: Q = {1, 2, 3}, F = {1} => Q\F = {2, 3})
@@ -89,29 +95,47 @@ fun coSet(firstSet : HashSet<Int>, secondSet: HashSet<Int>) : HashSet<Int> {
             complement.add(i)
         }
     }
-    //println(complement)
     return complement
 }
 
 fun invMaker(numberOfSymbols : Int, numberOfStates : Int, transition : Map<Pair<String, String>, MutableList<String>>) : Array<Array<IntArray>> {
     var Inv = Array(numberOfStates) { Array(numberOfSymbols) { IntArray(numberOfStates) } }
     for (i in transition) {
-        //println("${i.key.first} ${i.key.second} ${i.value}")
         for (j in i.value) {
             Inv[j.toInt()][i.key.second.toInt()][i.key.first.toInt()] = 1
         }
     }
+    return Inv
+}
 
-    for (i in 0..<numberOfStates) {
-        for (j in 0..<numberOfSymbols) {
-            for (k in 0..<numberOfStates) {
-                if (Inv[i][j][k] == 1) {
-                    println("$i $j $k")
+
+fun removeUnreachableStates(dfa : NDFA, classes : MutableList<HashSet<Int>>) : MutableList<HashSet<Int>> {
+    var outOfJ = false
+    var outOfK = false
+    var result = emptyList<HashSet<Int>>().toMutableList()
+
+    for (i in classes) {
+        println("i: $i")
+        for (j in i) {
+            for (k in dfa.states) {
+                for (l in k.value) {
+                    if (l == j.toString() && k.key.first != j.toString()) {
+                        result.add(i)
+                        outOfJ = true
+                        outOfK = true
+                        break
+                    }
                 }
+                if (outOfK) {
+                    outOfK = false
+                    break
+                }
+            }
+            if (outOfJ) {
+                outOfJ = false
+                break
             }
         }
     }
-    println("===============")
-
-    return Inv
+    return result
 }
